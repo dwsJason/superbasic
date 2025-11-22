@@ -39,19 +39,38 @@ F256Header:
 ; ************************************************************************************************
 
 		* = F256Header + 64
-		
+
+CPU_CORE_1x = 0
+CPU_CORE_2x = 1
+
+print_char .macro
+		lda 	\1
+		jsr 	EXTPrintCharacter
+		.endm
+
+print_hex .macro
+		lda 	\1
+		jsr 	PrintHex
+		.endm
+
+set_start_column .macro
+		lda 	#15
+		sta		EXTColumn
+		.endm
+
+
 Boot:	jmp 	Start
-		.include "../../../modules/_build/_linker.module"
+		.include "../../../modules/.build/_exports.module.asm"
 
 Start:	ldx 	#$FF 						; stack reset
-		txs	
+		txs
 
 		jsr 	EXTInitialise 				; hardware initialise
 
 		lda 	0  							; turn on editing of MMU LUT
 		ora 	#$80
 		sta 	0
-		
+
 		lda 	$2002 						; if $2002..5 is BT65 then jump to $2000
 		cmp 	#"B"
 		bne 	_NoMachineCode
@@ -66,57 +85,63 @@ Start:	ldx 	#$FF 						; stack reset
 		bne 	_NoMachineCode
 		jmp 	$2000
 
-_NoMachineCode:		
+_NoMachineCode:
 
 		lda 	#0 							; zero the default drive.
 		jsr 	KNLSetDrive
 
 		jsr 	TKInitialise 				; initialise tokeniser.
-		
+
 		.if 	graphicsIntegrated==1 		; if installed
 		lda 	#0 							; graphics system initialise.
 		tax
 		tay
 		jsr 	GXGraphicDraw
 		.endif
-		
+
 		.if 	soundIntegrated==1 			; if installed
 		lda 	#$0F 						; initialise sound system
 		jsr 	SNDCommand
 		.endif
 
-		lda 	#128+13 					; Display FPGA information.
-		jsr 	EXTPrintCharacter
-		lda 	#9
-		jsr 	EXTPrintCharacter
-		jsr 	EXTPrintCharacter
-		stz 	1
-		lda 	$D6AD
-		jsr 	PrintHex
-		lda 	$D6AC
-		jsr 	PrintHex
-		lda 	$D6AB
-		jsr 	PrintHex
-		lda 	$D6AA
-		jsr 	PrintHex
-		lda 	#32
-		jsr 	EXTPrintCharacter
-		lda 	$D6A8
-		jsr 	EXTPrintCharacter
-		lda 	$D6A9
-		jsr 	EXTPrintCharacter
+		stz 	$0001
 
-		lda 	#13 						; display Kernel information
+		.print_char #128+13				; set text color to bright red
+
+		; display hardware information
+		.set_start_column
+
+		.print_hex $D6AD
+		.print_hex $D6AC
+		.print_hex $D6AB
+		.print_hex $D6AA
+		.print_char #' '
+		.print_char $D6A8
+		.print_char $D6A9
+
+		.print_char #'/'					; print core version
+		lda		#'1'						; default to '1'
+		bit 	$D6A7 						; test the 7th bit of machine ID
+		bpl 	_1x_core
+		lda		#'2'
+	_1x_core:
 		jsr 	EXTPrintCharacter
-		lda 	#9
-		jsr 	EXTPrintCharacter
-		jsr 	EXTPrintCharacter
+		.print_char #'x'
+
+		; display Kernel information
+		.print_char #13
+		.set_start_column
+
 		lda 	#$08
 		ldx 	#$E0
 		jsr 	PrintStringXA
 
-		ldx 	#Prompt >> 8 				; display prompt
-		lda 	#Prompt & $FF
+		; display SuperBASIC version & prompt
+		.print_char #13
+		.set_start_column
+
+		lda 	#<Prompt
+		ldx 	#>Prompt
 		jsr 	PrintStringXA
 
 
@@ -130,16 +155,16 @@ _NoMachineCode:
 		.if 	AUTORUN==1 					; run straight off
 		jsr 	BackloadProgram
 		jmp 	RunCurrentProgram
-		.else		
+		.else
 		jmp 	WarmStart					; make same size.
 		jmp 	WarmStart
 		.endif
 
-Prompt:	.text 	13
-		.include "../generated/timestamp.asm"
+Prompt:	.include "../generated/timestamp.asm"
 		.text 	13,13,13,0
 
 		.send code
+
 
 ; ************************************************************************************************
 ;
