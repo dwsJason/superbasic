@@ -188,7 +188,7 @@ TileSwitch:
 		lda 	#GCMD_TileCtl
 		jsr 	GXGraphicDraw
 		plx
-		bpl 	TilesCtrlLoop 				; nothing else.
+		bpl 	_TileSwitchDone 			; OFF: skip size/scroll setup
 
 		lda 	#GCMD_TileSize 				; set size of tile map.
 		ldx 	TileMapWidth
@@ -199,8 +199,9 @@ TileSwitch:
 		jsr 	_TileResetScroll
 		lda 	#GCMD_TileScrollY
 		jsr 	_TileResetScroll
+_TileSwitchDone:
 		ply
-		jmp 	TilesCtrlLoop
+		bra 	TilesCtrlLoop
 
 _TileResetScroll:
 		ldx 	#0

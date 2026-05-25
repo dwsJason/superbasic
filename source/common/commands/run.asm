@@ -52,10 +52,10 @@ RunCurrentProgram:
 		;
 		; ----------------------------------------------------------------------------------------
 		
-RunNewLine:		
+RunNewLine:
 		.cget0 								; is there any more program to run ?
 		beq 	CRNoProgram         		; no then END.
-		ldx 	#$FF 						; reset stack
+		ldx 	fnSavedSP 					; reset SP ($FF at top level, saved SP in function)
 		txs
 		;
 		;		Run a line from here.
@@ -73,8 +73,8 @@ _CRIncMainLoop:
 		.breakcheck							; break check
 		bne 	_CRBreak
 		.tickcheck TickHandler  			; if time elapsed call the tick handler.
-_CRNoBreakCheck:		
-		; 									
+_CRNoBreakCheck:
+		;
 		iny									; next token
 _CRMainLoop:
 		stz 	stringInitialised 			; clear the temporary string initialised flag.
@@ -171,10 +171,10 @@ Shift2Command: ;; [!2:SH20]
 ;
 ; ************************************************************************************************		
 
-Unused1: 	;; [proc]
 Unused2: 	;; [to]
 Unused3: 	;; [downto]
 Unused4:	;; [then]
+Unused5:	;; [step]
 		jmp 	SyntaxError
 
 ; ************************************************************************************************		

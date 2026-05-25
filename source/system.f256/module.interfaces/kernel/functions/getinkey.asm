@@ -23,8 +23,7 @@ AscGet: ;; [get(]
 AscGet2:
 		jsr 	CheckRightBracket
 		jsr 	KNLGetSingleCharacter
-		jsr 	NSMSetByte
-		rts
+		jmp 	NSMSetByte
 _AGBreak:
 		.error_break
 
@@ -39,8 +38,7 @@ AscInkey: ;; [inkey(]
 AscInkey2:
 		jsr 	CheckRightBracket
 		jsr 	KNLGetKeyPressed
-		jsr 	NSMSetByte
-		rts
+		jmp 	NSMSetByte
 
 ; ************************************************************************************************
 ;
@@ -51,7 +49,7 @@ AscInkey2:
 ChrGet:	 ;; [get$(]
 		plx
 		jsr 	AscGet2
-		jmp 	ChrToString
+		bra 	ChrToString
 
 ChrInkey: ;; [inkey$(]
 		plx
@@ -67,13 +65,11 @@ ChrToString:
 		lda 	#1 							; allocate space for one char
 		jsr 	StringTempAllocate
 		pla 								; write number to it
-		jsr 	StringTempWrite
-		rts
+		jmp 	StringTempWrite
 
 _GKISNull:
 		lda 	#0
-		jsr 	StringTempAllocate
-		rts
+		jmp 	StringTempAllocate
 
 		.send code
 

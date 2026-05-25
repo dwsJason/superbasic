@@ -25,7 +25,6 @@ AssembleCommand: ;; [assemble]
 		lda 	NSMantissa0
 		sta 	AssemblerControl
 		rts
-		rts		
 		
 		.send code
 

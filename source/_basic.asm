@@ -18,6 +18,7 @@
 	.include	"./common/aa.system/00start.asm"
 	.include	"./system.f256/ab.system/events.asm"
 	.include	"./system.f256/ab.system/input.asm"
+	.include	"./system.f256/ab.system/scrollnav.asm"
 	.include	"./system.f256/ab.system/ticktask.asm"
 	.include	"./system.f256/ab.system/trackio.asm"
 	.include	"./system.f256/ab.system/wrapper.asm"
@@ -34,6 +35,7 @@
 	.include	"./common/commands/assert.asm"
 	.include	"./common/commands/call.asm"
 	.include	"./common/commands/data.asm"
+	.include	"./common/commands/def.asm"
 	.include	"./common/commands/dim.asm"
 	.include	"./common/commands/end.asm"
 	.include	"./common/commands/for.asm"
@@ -60,13 +62,13 @@
 	.include	"./common/commands/while.asm"
 	.include	"./common/errors/charcheck.asm"
 	.include	"./common/errors/errors.asm"
+	.include	"./common/expressions/binary/addsub.asm"
 	.include	"./common/expressions/binary/compare.asm"
 	.include	"./common/expressions/binary/concat.asm"
 	.include	"./common/expressions/binary/divide.asm"
 	.include	"./common/expressions/binary/multiply.asm"
 	.include	"./common/expressions/binary/scompare.asm"
 	.include	"./common/expressions/binary/shifts.asm"
-	.include	"./common/expressions/binary/simple.asm"
 	.include	"./common/expressions/binary/tostring.asm"
 	.include	"./common/expressions/expression.asm"
 	.include	"./common/expressions/float/addsub.asm"
@@ -105,6 +107,7 @@
 	.include	"./common/generated/constants.asm"
 	.include	"./common/generated/errors.asm"
 	.include	"./common/generated/timestamp.asm"
+	.include	"./common/generated/version.asm"
 	.include	"./system.f256/memory/memory.flat/delete.asm"
 	.include	"./system.f256/memory/memory.flat/insert.asm"
 	.include	"./system.f256/memory/memory.flat/memory.asm"
@@ -117,6 +120,7 @@
 	.include	"./system.f256/module.interfaces/graphics/tile.asm"
 	.include	"./system.f256/module.interfaces/hardware/cls.asm"
 	.include	"./system.f256/module.interfaces/hardware/cursor.asm"
+	.include	"./system.f256/module.interfaces/kernel/commands/cd.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/crossdev.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/dos.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/event.asm"
@@ -129,10 +133,14 @@
 	.include	"./system.f256/module.interfaces/kernel/commands/files/try.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/files/verify.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/joy.asm"
+	.include	"./system.f256/module.interfaces/kernel/commands/lomem.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/memcopy.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/mouse.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/setdatetime.asm"
 	.include	"./system.f256/module.interfaces/kernel/commands/timer.asm"
+	.include	"./system.f256/module.interfaces/kernel/functions/cd.asm"
+	.include	"./system.f256/module.interfaces/kernel/functions/dir.asm"
+	.include	"./system.f256/module.interfaces/kernel/functions/fre.asm"
 	.include	"./system.f256/module.interfaces/kernel/functions/getdatetime.asm"
 	.include	"./system.f256/module.interfaces/kernel/functions/getinkey.asm"
 	.include	"./system.f256/module.interfaces/kernel/functions/keydown.asm"
@@ -147,6 +155,7 @@
 	.include	"./common/stack/setup.asm"
 	.include	"./common/strings/concrete.asm"
 	.include	"./common/strings/stringalloc.asm"
+	.include	"./common/expressions/unary/fn.asm"
 
 
 .section code
@@ -157,14 +166,17 @@ StartModuleCode:
 	.endif
 .send code
 	.include	"../modules/.build/hardware.module.asm"
-	.include	"../modules/.build/graphics.module.asm"
 	.include	"../modules/.build/tokeniser.module.asm"
-	.include	"../modules/.build/sound.module.asm"
-	.include	"../modules/.build/kernel.module.asm"
-.section code
-	.if PagingEnabled==1
-	* = $A000
-	.offs $4000
-	.endif
-.send code
-	.include	"../modules/hardware/header/.build/headerdata.dat"
+	.include	"../modules/.build/graphics.module.asm"
+
+; --- Startup banner data in boot section ($6000-$7FFF) ---
+	.include	"../modules/hardware/startup/.build/banner.dat"
+
+; --- Module page 2 (slot 3) ---
+; page2 section at $4000 (below boot section at $6000)
+; .logical * + $2000 in each block maps labels to $6000+ runtime addresses
+
+; --- Error text in slot 3 module page ---
+	.include	"./common/generated/_errortext_p2.asm"
+	.include	"../modules/.build/kernel_p2.module.asm"
+	.include	"../modules/.build/sound_p2.module.asm"

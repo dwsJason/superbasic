@@ -76,6 +76,9 @@ NSMantissa3:
 NSExponent: 								; Exponent , 0 = Mantissa is integer
 		.fill 	MathStackSize
 
+fnStackLevel:								; saved stack level for function evaluation
+		.fill 	1
+
 		.send zeropref
 
 
@@ -106,7 +109,9 @@ decimalCount:								; decimal digit count
 		.fill 	1
 
 lowMemPtr: 									; memory allocation after program.
-		.fill 	2	
+		.fill 	2
+arrayMemPtr: 								; array/alloc storage pointer (slots 2-3, $4000-$7FFF)
+		.fill 	2
 stringMemory: 								; allocate concrete strings from here
 		.fill 	2			
 stringInitialised: 							; string 
@@ -145,8 +150,12 @@ BaseOpcode: 								; base opcode
 		.fill 	1		
 ModeMask: 									; modes allowed
 		.fill 	1		
-listIndent:	 								; list indent level. 
-		.fill 	1				
+listIndent:	 								; list indent level.
+		.fill 	1
+listElseFound:								; flag set when ELSE found on line (for indent fix)
+		.fill 	1
+listEndToken:								; closing token for LIST proc/fn
+		.fill 	1
 lcLastCharacter: 							; last character output.
 		.fill 	1	
 isPrintFlag:	 							; zero if input, non-zero if print, bit 6 zero = character print
@@ -166,14 +175,23 @@ tokenBuffer:
 lineBuffer: 								; used for input - ASCII line goes here
 		.fill 	253
 
+programChanged:
+		.fill	1							; tracks whether program has been changed since last save
+
+;		Slot 3 module bank switching state (placed before buffers so that
+;		a numberBuffer/decimalBuffer overflow cannot corrupt them).
+Slot3ModulePage:
+		.fill 	1
+Slot3Depth:
+		.fill 	1
+Slot3Saved:
+		.fill 	1
+
 numberBuffer:								; buffer for numbers (32 bit binary + sign + ASCIIZ)
 		.fill 	34
 decimalBuffer: 								; buffer for number -> string conversion.
-		.fill 	16		
+		.fill 	24
 
-programChanged:
-		.fill	1							; tracks whether program has been changed since last save
-		
 		.send 	storage
 
 ; ************************************************************************************************

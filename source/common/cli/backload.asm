@@ -37,7 +37,6 @@ _BPLoop:
 		ldx 	#$FF
 
 		jsr 	BLReadByte 					; read a byte
-		cmp 	#0
 		beq 	_BPExit 					; if 0 exit
 		bmi 	_BPExit 					; if -ve exit
 _BPCopy:
@@ -76,8 +75,7 @@ _BPEndLine:
 		;
 _BPExit:
 		stz 	$FFFA
-		jsr 	ClearSystem 				; clear variables etc.
-		rts
+		jmp 	ClearSystem 				; clear variables etc.
 _BLLoad:
 		.text 	"Loading from Memory",13,0
 

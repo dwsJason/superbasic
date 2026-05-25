@@ -27,8 +27,10 @@ class TokenSource(object):
 				repeat
 				for
 				proc
+				fn
 			{-} 						// Shift down
 				wend
+				endfn
 				endif
 				then
 				until
@@ -42,7 +44,8 @@ class TokenSource(object):
 				joyb( 		min(		max( 		hit( 		playing(	gettime$(
 				peek( 		peekw( 		peekl(		peekd(		getdate$(	inkey$(
 				get$( 		inkey(		get( 		itemcount(	itemget$( 	keydown(
-				tile(		screen(	    screen$(
+				tile(		screen(	    screen$(	fre(~
+				cwd$(		dir$(		dir(		tab(
 
 			{0}							// Set 0
 				data 		dim 		let 		rem  		else 		to
@@ -51,6 +54,8 @@ class TokenSource(object):
 				colour 		solid 		outline 	gfx			image 		at
 				from		plot 		on 			off 		palette 	sound
 				poke 		pokew 		pokel 		poked 		memcopy 	clear
+				step~
+				name
 
 			{1}							// Set 1
 				end 		new 		list 		run 		stop
@@ -58,10 +63,10 @@ class TokenSource(object):
 				load 		go 			zap	 		ping 		setdate
 				shoot 		explode 	xload 		xgo 		settime
 				save		verify		drive 		dir 		bload
-				bsave		himem 		input 		cls 		gosub
+				bsave		lomem 		input 		cls 		gosub
 				return 		print 		cprint 		goto 		cursor
 				mouse 		mdelta 		try 		tile 		tiles
-				option
+				option		cd
 
 			{2}							// Set 2 (Assembler Mnemonics)
 				adc	and	asl	bcc	bcs	beq	bit	bmi	bne	bpl	bra	brk	bvc	bvs
@@ -80,15 +85,19 @@ class TokenSource(object):
 
 
 class Token(object):
-    def __init__(self, name, set):
+    def __init__(self, name, set, sort_last=False):
         self.name = name.upper().strip()
         self.set = set
         self.id = None
         self.label = None
+        self._sort_last = sort_last
 
     #
     def sortKey(self):
-        return "9" + str(self.set) + self.name
+        prefix = "9" + str(self.set)
+        if self._sort_last:
+            prefix += "~"
+        return prefix + self.name
 
     #
     def getName(self):
@@ -132,11 +141,12 @@ class CtrlToken(Token):
 
 
 class UnaryToken(Token):
-    def __init__(self, name):
+    def __init__(self, name, sort_last=False):
         Token.__init__(self, name, 0)
+        self._sort_last = sort_last
 
     def sortKey(self):
-        return "1" + self.name
+        return ("1~" if self._sort_last else "1") + self.name
 
 
 class StructureToken(Token):
@@ -189,9 +199,15 @@ class TokenCollection(object):
                 if cClass == "+" or cClass == "-":  # Adjuster / structure
                     newToken = StructureToken(w, 1 if cClass == "+" else -1)
                 elif cClass == "U":  # Unary function
-                    newToken = UnaryToken(w)
+                    sort_last = w.endswith("~")
+                    if sort_last:
+                        w = w[:-1]
+                    newToken = UnaryToken(w, sort_last=sort_last)
                 else:  # The rest
-                    newToken = Token(w, int(cClass))
+                    sort_last = w.endswith("~")
+                    if sort_last:
+                        w = w[:-1]
+                    newToken = Token(w, int(cClass), sort_last=sort_last)
                 self.addToken(w, newToken)
         self.tokenList.sort(key=lambda x: x.sortKey())  # sort into the correct order
 

@@ -74,6 +74,30 @@ EXTPendingWrap		.fill 	1
 EXTPendingWrapEnabled	.fill 	1
 
 ;;
+; Line-wrap tracking for multi-line BASIC statements
+;;
+lwInListMode		.fill 	1		; Flag: 1 if outputting LIST/scroll nav content
+lwLineStartRow		.fill 	1		; Row where current BASIC line started
+lwLineRowCount		.fill 	1		; Number of display rows current line occupies
+
+;;
+; Flag to suppress hardware cursor updates during background printing
+;;
+EXTSuppressCursor	.fill 	1		; When non-zero, EXTSetHardwareCursor is a no-op
+
+;;
+; Line-wrap tracking bitmap for editing
+; Bit N in byte M = row (M*8+N) wrapped from previous row
+;;
+lwWrapFlags			.fill 	8		; 8 bytes = 64 rows max tracked
+
+;;
+; Temporary storage for insert overflow handling
+;;
+lwOverflowChar		.fill 	1		; character being pushed to next row
+lwOverflowTyped		.fill 	1		; typed character backup
+
+;;
 ; Screen height in characters.
 ;
 ; Stores the number of character rows available on the screen. This value
@@ -92,10 +116,10 @@ EXTScreenHeight		.fill 	1
 ; Contains precomputed memory offsets for each screen row to enable fast row
 ; address calculation. Each entry is a 16-bit offset from the screen base
 ; address (`EXTMemory`) to the start of that row. The table is filled during
-; initialization by `EXTInitialise`.
+; initialization by `EXTInitialize`.
 ;
 ; \size    128 entries × 2 bytes = 256 bytes total
-; \see     EXTInitialise, EXTMemory, EXTAddress
+; \see     EXTInitialize, EXTMemory, EXTAddress
 ;;
 EXTScreenRowOffsets	.fill 	128 * 2
 

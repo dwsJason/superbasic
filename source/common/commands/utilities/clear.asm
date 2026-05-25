@@ -35,8 +35,9 @@ _ClearOneVariable:
 		cpy 	#8
 		bne 	_ClearOneVariable	
 
-		ldy 	#2 							; has it been marked procedure
+		ldy 	#2 							; has it been marked procedure or function
 		lda 	(zTemp0),y
+		and 	#NSBTypeMask 				; check type bits only (catches both $18 and $1C)
 		cmp 	#NSTProcedure
 		bne 	_ClearNotProcedure
 		lda 	#NSTInteger+NSBIsArray 		; if so set it back to an integer array
@@ -53,7 +54,7 @@ _ClearNotProcedure:
 _ClearZeroEnd:
 		;
 		;		Reset the low memory allocation pointer, which is the byte after
-		;		the identifiers. 
+		;		the identifiers.
 		;
 		clc
 		lda 	zTemp0
@@ -63,9 +64,19 @@ _ClearZeroEnd:
 		adc 	#0
 		sta 	lowMemPtr+1
 		;
+		;		Reset the array memory pointer to start of slots 2-3.
+		;
+		.set16 	arrayMemPtr,ArrayStart
+		;
 		;		Reset the BASIC Stack pointer
 		;
 		jsr 	StackReset
+		;
+		;		Reset the function nesting level
+		;
+		stz 	fnNestLevel
+		lda 	#$FF
+		sta 	fnSavedSP
 		;
 		;		Reset the BASIC string pointer
 		;
@@ -96,9 +107,10 @@ _ClearZeroEnd:
 		;		Reset bitmap/sprites/tiles pages
 		;			
 		.if graphicsIntegrated==1
-		jsr 	ResetBitmapSpritesTiles
-		.endif
+		jmp 	ResetBitmapSpritesTiles
+		.else
 		rts
+		.endif
 
 		.send code
 

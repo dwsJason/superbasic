@@ -25,8 +25,7 @@ ROOTDIR := $(abspath $(SELFDIR)..$(S))$(S)
 #
 #		External repositories
 #
-KRN_REPO = https://github.com/FoenixRetro/f256-microkernel
-ASSETS_REPO = https://github.com/FoenixRetro/f256-bootscreens
+KRN_REPO = https://github.com/wildbitscomputing/MicroKernel
 LDR_REPO = https://github.com/pweingar/FoenixMgr
 #
 #		Dirs
@@ -39,7 +38,7 @@ RELEASEDIR = $(ROOTDIR).release$(S)
 #
 ASM ?= 64tass
 ASFLAGS ?= -q -b -Wall -c -C
-PYTHON ?= python
+PYTHON ?= uv run
 GIT ?= git
 #
 #		Load Addresses
